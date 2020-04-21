@@ -116,6 +116,7 @@ names(TSRs_cz) <- c("Cz_r1,", "Cz_r2", "Cz_r3")
 
 exp <- tsr_explorer(Cz.tss, TSRs_cz)
 exp <- count_normalization(exp, data_type = "tss", threshold = 3, n_samples = 1)
+exp <- count_normalization(exp, data_type = "tsr", threshold = 5, n_samples = 1)
 
 #making the exp files with two replicates
 Cz.tss <- list(tss.1.gr, tss.2.gr)
@@ -143,7 +144,9 @@ p <- plot_correlation(exp, data_type = "tss") +
   ggplot2::theme_bw() +
   ggplot2::theme(text = element_text(size = 6))
 
-ggsave("tss_correlation_Czo_single.png", plot = p, device = "png", type = "cairo", height = 3, width = 3)
+p
+
+ggsave("tss_correlation_Czo_single.png", plot = p, device = "png", type = "cairo", height = 6, width = 6)
 
 ###
 # annotate TSSs
@@ -156,7 +159,9 @@ tss_distribution <- genomic_distribution(exp, data_type = "tss", threshold = 5)
 p <- plot_genomic_distribution(tss_distribution) +
   ggplot2::theme(text = element_text(size = 6))
 
-ggsave("tss_genomic_distribution_singlerep.png", plot = p, device = "png", type = "cairo", height = .5, width = 4)
+p
+
+ggsave("tss_genomic_distribution_singlerep.png", plot = p, device = "png", type = "cairo", height = 2, width = 6)
 
 ### making feature plots
 
@@ -165,7 +170,9 @@ features <- detect_features(exp, data_type = "tss", feature_type = "gene", thres
 p <- plot_detected_features(features, ncol = 3) +
   ggplot2::theme(text = element_text(size = 5))
 
-ggsave("tss_feature_plot_Pdec_all_reps.png", plot = p, device = "png", type = "cairo", height = 2, width = 4)
+p
+
+ggsave("tss_feature_plot_Pdec_all_reps.png", plot = p, device = "png", type = "cairo", height = 6, width = 10)
 
 ## plotting dinucleotide frequencies
 # this generates an error; requires the truncated set
@@ -182,7 +189,7 @@ ggsave("tss_dinucleotide_frequencies_1_rep.png", plot = p, device = "png", type 
 max <- max_utr(exp, threshold = 5, max_upstream = 250, max_downstream=100, feature_type = "geneId")
 p <- plot_max_utr(max, ncol = 3, upstream = 250, downstream=100)
 p
-ggsave("max_utr_pdec_3reps.png", plot = p, device = "png", type = "cairo", height = 2, width = 6)
+ggsave("max_utr_pdec_3reps.png", plot = p, device = "png", type = "cairo", height = 5, width = 7)
 
 ### TSR analyses
 
@@ -191,11 +198,25 @@ exp <- annotate_features(exp, annotation_file = annotation, data_type = "tsr", f
 exp <- count_normalization(exp, data_type = "tsr")
 exp2 <- count_normalization(exp2, data_type = "tsr")
 
+tsr_distribution <- genomic_distribution(exp, data_type = "tsr", threshold = 5)
+
+p <- plot_genomic_distribution(tsr_distribution) +
+  ggplot2::theme(text = element_text(size = 6))
+
+p
+
+ggsave("tsr_genomic_distribution_all.png", plot = p, device = "png", type = "cairo", height = 4, width = 10)
+
 # TSR correlation heatmap and scatter plot
 # this is currently throwing up an error
 p <- plot_correlation(exp, data_type = "tsr") +
   ggplot2::theme_bw() +
   ggplot2::theme(text = element_text(size = 6))
+
+#Error: Can't find column `\`Cz_r1,\`` in `.data`.
+#Run `rlang::last_error()` to see where the error occurred.
+
+p
 
 ggsave("tsr_correlation_pdec_3reps.png", plot = p, device = "png", type = "cairo", height = 9, width = 9)
 
@@ -206,7 +227,10 @@ count_matrix <- tss_heatmap_matrix(exp, threshold = 3, anno_type = "geneId", ups
 p <- plot_heatmap(count_matrix, ncol = 3) +
   ggplot2::theme(text = element_text(size = 6))
 
+p
+
 ggsave("tss_heatmap.png", plot = p, device = "png", type = "cairo", height = 2, width = 4)
+
 
 ### tsr distribution
 
@@ -222,6 +246,8 @@ ggsave("tsr_genomic_distribution.png", plot = p, device = "png", type = "cairo",
 p <- plot_tsr_metric(exp, tsr_metrics = c("nTAGs", "nTSSs"), log2_transform = TRUE, ncol = 2) +
   ggplot2::theme(text = element_text(size = 6))
 
+p
+
 ggsave("tsr_metrics.png", plot = p, device = "png", type = "cairo", width = 4, height = 2)
 
 #### Making some figures in yeast
@@ -231,12 +257,9 @@ load("ScSTRIPE-wf3.RData")
 ## setting up the yeast tsrexplorer object
 
 #making the exp files with all three replicates
-wt.tss.1 <- ScSTRIPE@tssCountData[[4]]
-wt.tss.2 <- ScSTRIPE@tssCountData[[5]]
-wt.tss.3 <- ScSTRIPE@tssCountData[[6]]
-dia.tss.1 <- ScSTRIPE@tssCountData[[10]]
-dia.tss.2 <- ScSTRIPE@tssCountData[[11]]
-dia.tss.3 <- ScSTRIPE@tssCountData[[12]]
+wt.tss.1 <- CzSTRIPE@tssCountData[[4]]
+wt.tss.2 <- CzSTRIPE@tssCountData[[5]]
+wt.tss.3 <- CzSTRIPE@tssCountData[[6]]
 
 names(wt.tss.1) <- c("seq", "start", "strand", "score", "isreal")
 names(wt.tss.2) <- c("seq", "start", "strand", "score", "isreal")
@@ -356,8 +379,27 @@ p + geom_histogram(colours="black",fill="purple",binwidth=25) + scale_x_continuo
              color = "black", size=0.5)
 ggsave(file="AP_usage_histogram.png", width=4, height = 3)
 
-## making a gbrowse-style plot
+## making a gbrowse-style TSR plot
 
-if (!requireNamespace("BiocManager", quietly = TRUE))
-  install.packages("BiocManager")
-BiocManager::install("Gviz", version = "release")
+#if (!requireNamespace("BiocManager", quietly = TRUE))
+  #install.packages("BiocManager")
+#BiocManager::install("Gviz")
+
+library("Gviz")
+library("Biostrings")
+library("rtracklayer")
+library("GenomicRanges")
+  
+Czo_genome <- Biostrings::readDNAStringSet(file="../CzGENOME/Czo_genome.fa")
+Czo_genes <- rtracklayer::import.gff3(con="../CzGENOME/Czo_genes.gff3")
+
+Czo_genes.2 <- Czo_genes[Czo_genes$type=="gene",]
+test.out <- Czo_genes.2[1:10,]
+
+atrack <- AnnotationTrack(test.out, name="Cz_genes")
+
+plotTracks(atrack)
+
+grtrack <- GeneRegionTrack(Czo_genes, genome=Czo_genome, chromosome="chr01", name="Cz01g00020.t1.v5.2.3.CDS.1")
+gtrack <- GenomeAxisTrack()
+plotTracks(list(gtrack, atrack))
